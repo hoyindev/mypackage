@@ -1,130 +1,156 @@
 package jsonlog
 
 import (
-	"os"
+	"fmt"
+	"io"
+	"runtime"
 
 	"github.com/sirupsen/logrus"
 )
 
-type JsonLogger struct {
-	DefaultLogger *logrus.Entry
+//JSONLogger object with logrus.Entry and config for line number
+type JSONLogger struct {
+	DefaultLogger  *logrus.Entry
+	withLineNumber bool
 }
 
-func NewJsonLogger() *JsonLogger {
-	requestLogger := logrus.WithFields(logrus.Fields{})
-	logger := JsonLogger{
-		DefaultLogger: requestLogger,
+//NewJSONLogger create JSONLogger object
+func NewJSONLogger() *JSONLogger {
+	logger := JSONLogger{
+		DefaultLogger:  logrus.WithFields(logrus.Fields{}),
+		withLineNumber: false,
 	}
 	return &logger
 }
 
-func (logger *JsonLogger) SetUpConfig() {
-	// Log as JSON instead of the default ASCII formatter.
+//SetJSONFormatter set log in json format
+func (logger *JSONLogger) SetJSONFormatter() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
-	logrus.SetOutput(os.Stdout)
-
-	// Only log the warning severity or above.
-	// logrus.SetLevel(log.WarnLevel)
 }
 
-func (logger *JsonLogger) SetDefaultMsg(fields logrus.Fields) {
+//SetOutput set io writer
+func (logger *JSONLogger) SetOutput(out io.Writer) {
+	logrus.SetOutput(out)
+}
+
+//AddFields with more fields
+func (logger *JSONLogger) AddFields(fields logrus.Fields) {
 	logger.DefaultLogger = logger.DefaultLogger.WithFields(fields)
 }
 
-func (logger *JsonLogger) SetLevel(level logrus.Level) {
+//SetLineNumber set line number in log
+func (logger *JSONLogger) SetLineNumber(with bool) {
+	logger.withLineNumber = with
+}
+
+func (logger *JSONLogger) lineNumberMiddleware() *logrus.Entry {
+	if logger.withLineNumber {
+		return logger.DefaultLogger.WithFields(
+			logrus.Fields{
+				"caller": getLineNumber(3),
+			},
+		)
+	}
+	return logger.DefaultLogger
+
+}
+
+func getLineNumber(deep int) string {
+	pc, fn, line, _ := runtime.Caller(deep)
+	return fmt.Sprintf("[Caller] [%s:%s:%d]", runtime.FuncForPC(pc).Name(), fn, line)
+}
+
+//SetLevel set level
+func (logger *JSONLogger) SetLevel(level logrus.Level) {
 	logger.DefaultLogger.Logger.SetLevel(level)
 }
 
-func (logger *JsonLogger) GetLevel() logrus.Level {
+//GetLevel get level
+func (logger *JSONLogger) GetLevel() logrus.Level {
 	return logger.DefaultLogger.Logger.GetLevel()
 }
 
-func (logger *JsonLogger) Info(args ...interface{}) {
-	logger.DefaultLogger.Info(args...)
+//Info print info
+func (logger *JSONLogger) Info(args ...interface{}) {
+	logger.lineNumberMiddleware().Info(args...)
 }
 
-func (logger *JsonLogger) Infoln(args ...interface{}) {
-	logger.DefaultLogger.Infoln(args...)
+//Infoln println info
+func (logger *JSONLogger) Infoln(args ...interface{}) {
+	logger.lineNumberMiddleware().Infoln(args...)
 }
 
-func (logger *JsonLogger) Infof(format string, args ...interface{}) {
-	logger.DefaultLogger.Infof(format, args...)
+//Infof printf info
+func (logger *JSONLogger) Infof(format string, args ...interface{}) {
+	logger.lineNumberMiddleware().Infof(format, args...)
 }
 
-func (logger *JsonLogger) Warn(args ...interface{}) {
-	logger.DefaultLogger.Warn(args...)
+//Warn print warm
+func (logger *JSONLogger) Warn(args ...interface{}) {
+	logger.lineNumberMiddleware().Warn(args...)
 }
 
-func (logger *JsonLogger) Warnln(args ...interface{}) {
-	logger.DefaultLogger.Warnln(args...)
+//Warnln println warn
+func (logger *JSONLogger) Warnln(args ...interface{}) {
+	logger.lineNumberMiddleware().Warnln(args...)
 }
 
-func (logger *JsonLogger) Warnf(format string, args ...interface{}) {
-	logger.DefaultLogger.Warnf(format, args...)
+//Warnf printf warn
+func (logger *JSONLogger) Warnf(format string, args ...interface{}) {
+	logger.lineNumberMiddleware().Warnf(format, args...)
 }
 
-func (logger *JsonLogger) Trace(args ...interface{}) {
-	logger.DefaultLogger.Trace(args...)
+//Trace print trace
+func (logger *JSONLogger) Trace(args ...interface{}) {
+	logger.lineNumberMiddleware().Trace(args...)
 }
 
-func (logger *JsonLogger) Traceln(args ...interface{}) {
-	logger.DefaultLogger.Traceln(args...)
+//Traceln println trace
+func (logger *JSONLogger) Traceln(args ...interface{}) {
+	logger.lineNumberMiddleware().Traceln(args...)
 }
 
-func (logger *JsonLogger) Tracef(format string, args ...interface{}) {
-	logger.DefaultLogger.Tracef(format, args...)
+//Tracef print tracef
+func (logger *JSONLogger) Tracef(format string, args ...interface{}) {
+	logger.lineNumberMiddleware().Tracef(format, args...)
 }
 
-func (logger *JsonLogger) Debug(args ...interface{}) {
-	logger.DefaultLogger.Debug(args...)
+//Debug print debug
+func (logger *JSONLogger) Debug(args ...interface{}) {
+	logger.lineNumberMiddleware().Debug(args...)
 }
 
-func (logger *JsonLogger) Debugln(args ...interface{}) {
-	logger.DefaultLogger.Debugln(args...)
+//Debugln println debug
+func (logger *JSONLogger) Debugln(args ...interface{}) {
+	logger.lineNumberMiddleware().Debugln(args...)
 }
 
-func (logger *JsonLogger) Debugf(format string, args ...interface{}) {
-	logger.DefaultLogger.Debugf(format, args...)
+//Debugf printf debug
+func (logger *JSONLogger) Debugf(format string, args ...interface{}) {
+	logger.lineNumberMiddleware().Debugf(format, args...)
 }
 
-func (logger *JsonLogger) Error(args ...interface{}) {
-	logger.DefaultLogger.Error(args...)
+//Error print err
+func (logger *JSONLogger) Error(args ...interface{}) {
+	logger.lineNumberMiddleware().Error(args...)
 }
 
-func (logger *JsonLogger) Errorln(args ...interface{}) {
-	logger.DefaultLogger.Errorln(args...)
+//Errorln println err
+func (logger *JSONLogger) Errorln(args ...interface{}) {
+	logger.lineNumberMiddleware().Errorln(args...)
 }
 
-func (logger *JsonLogger) Errorf(format string, args ...interface{}) {
-	logger.DefaultLogger.Errorf(format, args...)
+//Errorf printf err
+func (logger *JSONLogger) Errorf(format string, args ...interface{}) {
+	logger.lineNumberMiddleware().Errorf(format, args...)
 }
 
-//will exit status 1
-func (logger *JsonLogger) Fatal(args ...interface{}) {
-	logger.DefaultLogger.Fatal(args...)
+//Fatal will exit status 1
+func (logger *JSONLogger) Fatal(args ...interface{}) {
+	logger.lineNumberMiddleware().Fatal(args...)
 }
 
-//will exit status 1
-func (logger *JsonLogger) Panic(args ...interface{}) {
-	logger.DefaultLogger.Panic(args...)
-}
-
-//below are examples on how to create log func with extra param (if extra fields required to be added)
-func (logger *JsonLogger) CustomInfo(user string, args ...interface{}) {
-	logger.DefaultLogger.WithFields(
-		logrus.Fields{
-			"user": user,
-		},
-	).Info(args...)
-}
-
-func (logger *JsonLogger) CustomWarn(user string, args ...interface{}) {
-	logger.DefaultLogger.WithFields(
-		logrus.Fields{
-			"user": user,
-		},
-	).Warn(args...)
+//Panic will exit status 1
+func (logger *JSONLogger) Panic(args ...interface{}) {
+	logger.lineNumberMiddleware().Panic(args...)
 }

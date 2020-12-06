@@ -1,24 +1,29 @@
 package jsonlog
 
 import (
+	"os"
 	"testing"
 
 	"fmt"
 )
 
 func TestJsonLogger(t *testing.T) {
-	myLogger := NewJsonLogger()
-	fields := make(map[string]interface{})
-	fields["service"] = "api"
 
-	myLogger.SetUpConfig()
-	myLogger.SetDefaultMsg(fields)
+	myLogger := NewJSONLogger()
+
+	fields := map[string]interface{}{
+		"service": "api 1",
+		"admin":   "admin A",
+	}
+	// setup log config
+	myLogger.AddFields(fields)
+	myLogger.SetLineNumber(true)
+	myLogger.SetJSONFormatter()
+	myLogger.SetOutput(os.Stdout)
+
 	currentLevel := myLogger.GetLevel()
 	fmt.Println("default level", currentLevel, " now set trace level")
-	myLogger.SetLevel(TraceLevel)
-
-	myLogger.CustomInfo("userB", "msg in log info")
-	myLogger.CustomWarn("userA", "msg in log warn")
+	myLogger.SetLevel(Trace)
 
 	myLogger.Info("info msg,", "Gopher")
 	myLogger.Infoln("infoln msg,", "Gopher")
@@ -31,13 +36,6 @@ func TestJsonLogger(t *testing.T) {
 	myLogger.Error("error msg,", "Gopher")
 	myLogger.Errorln("errorln msg,", "Gopher")
 	myLogger.Errorf("%s", "errorf msg")
-
-	//***********************************************
-	//set debug level to show debug level log || set trace level to show debug and trace level log
-	//***********************************************
-	// myLogger.SetLevel(logrus.TraceLevel)
-	// currentLevel = myLogger.GetLevel()
-	// fmt.Println("after set level", currentLevel)
 
 	myLogger.Debug("debug msg,", "Gopher")
 	myLogger.Debugln("debugln msg,", "Gopher")
